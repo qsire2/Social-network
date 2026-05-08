@@ -1,0 +1,92 @@
+{% extends 'network/base.html' %}
+
+{% block title %}Пошук: {{ query }} - SocialNet{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-4">
+    <div class="col-md-8 col-lg-6">
+
+        <div class="d-flex align-items-center justify-content-between mb-4">
+            <h4 class="fw-bold text-dark mb-0">
+                {% if query %}
+                    Результати для "{{ query }}"
+                {% else %}
+                    Усі користувачі
+                {% endif %}
+            </h4>
+            <span class="badge bg-primary rounded-pill">{{ results|length }} знайдено</span>
+        </div>
+
+        {% if results %}
+            {% for found_user in results %}
+                <div class="card mb-3 shadow-sm border-0 rounded-4 overflow-hidden transition-hover">
+                    <div class="card-body p-3">
+                        <div class="d-flex align-items-center justify-content-between">
+
+                            <div class="d-flex align-items-center">
+                                <div class="position-relative">
+                                    {% if found_user.profile.avatar %}
+                                        <img src="{{ found_user.profile.avatar.url }}"
+                                             class="rounded-circle border shadow-sm"
+                                             style="width: 60px; height: 60px; object-fit: cover;">
+                                    {% else %}
+                                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center shadow-sm"
+                                             style="width: 60px; height: 60px; font-weight: bold; font-size: 24px;">
+                                            {{ found_user.username|first|upper }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="ms-3">
+                                    <h6 class="mb-0 fw-bold text-dark">{{ found_user.username }}</h6>
+                                    <p class="text-muted small mb-0">@{{ found_user.username }}</p>
+                                    {% if found_user.profile.bio %}
+                                        <small class="text-secondary d-block mt-1 text-truncate" style="max-width: 250px;">
+                                            {{ found_user.profile.bio }}
+                                        </small>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="text-end">
+                                <a href="{% url 'profile' found_user.username %}" class="btn btn-outline-primary btn-sm rounded-pill px-4 fw-bold">
+                                    Профіль
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="card border-0 shadow-sm rounded-4 p-5 text-center bg-white">
+                <div class="mb-3">
+                    <span style="font-size: 50px;">🔍</span>
+                </div>
+                <h5 class="fw-bold text-dark">Нікого не знайдено</h5>
+                <p class="text-muted">Спробуйте ввести інше ім'я або перевірте правильність написання.</p>
+                <div class="mt-3">
+                    <a href="{% url 'index' %}" class="btn btn-primary rounded-pill px-4">На головну</a>
+                </div>
+            </div>
+        {% endif %}
+
+    </div>
+</div>
+
+<style>
+    /* Ефект при наведенні на картку користувача */
+    .transition-hover {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .transition-hover:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.1) !important;
+    }
+    .text-truncate {
+        display: -webkit-box;
+        -webkit-line-clamp: 1;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+</style>
+{% endblock %}

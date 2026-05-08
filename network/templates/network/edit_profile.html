@@ -1,0 +1,74 @@
+{% extends 'network/base.html' %}
+
+{% block title %}Налаштування профілю - SocialNet{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6 col-lg-5">
+        <div class="card shadow-lg border-0 rounded-4">
+            <div class="card-header bg-white border-0 pt-4 text-center">
+                <h3 class="fw-bold text-dark">Налаштування профілю</h3>
+                <p class="text-muted small">Оновіть своє фото та інформацію про себе</p>
+            </div>
+
+            <div class="card-body px-4 pb-4">
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    <div class="text-center mb-4">
+                        <div class="position-relative d-inline-block">
+                            {% if user.profile.avatar %}
+                                <img src="{{ user.profile.avatar.url }}" id="avatar-preview" class="rounded-circle border shadow-sm" style="width: 120px; height: 120px; object-fit: cover;">
+                            {% else %}
+                                <div id="avatar-placeholder" class="bg-primary text-white rounded-circle mx-auto d-flex align-items-center justify-content-center shadow-sm" style="width: 120px; height: 120px; font-size: 40px; font-weight: bold;">
+                                    {{ user.username|first|upper }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="id_avatar" class="form-label fw-bold small text-secondary">Ваше фото</label>
+                        <input type="file" name="avatar" id="id_avatar" class="form-control form-control-sm rounded-3 shadow-sm" accept="image/*">
+                        <div class="form-text mt-1" style="font-size: 11px;">Рекомендовано квадратне фото (JPG, PNG).</div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="id_bio" class="form-label fw-bold small text-secondary">Про себе (Bio)</label>
+                        <textarea name="bio" id="id_bio" class="form-control rounded-3 shadow-sm" rows="4" placeholder="Розкажіть щось цікаве про себе...">{{ user.profile.bio }}</textarea>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg rounded-3 fw-bold shadow-sm">
+                            Зберегти зміни
+                        </button>
+                        <a href="{% url 'profile' user.username %}" class="btn btn-link btn-sm text-decoration-none text-muted">Скасувати</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('id_avatar').onchange = function (evt) {
+        var tgt = evt.target || window.event.srcElement,
+            files = tgt.files;
+
+        if (FileReader && files && files.length) {
+            var fr = new FileReader();
+            fr.onload = function () {
+                let img = document.getElementById('avatar-preview');
+                if (img) {
+                    img.src = fr.result;
+                } else {
+                    // Якщо аватарки не було, замінюємо букву на картинку
+                    let placeholder = document.getElementById('avatar-placeholder');
+                    placeholder.outerHTML = `<img src="${fr.result}" id="avatar-preview" class="rounded-circle border shadow-sm" style="width: 120px; height: 120px; object-fit: cover;">`;
+                }
+            }
+            fr.readAsDataURL(files[0]);
+        }
+    }
+</script>
+{% endblock %}
