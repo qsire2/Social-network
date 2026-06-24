@@ -8,4 +8,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . /app/
 RUN python manage.py collectstatic --noinput
 EXPOSE 8000
-CMD sh -c "python manage.py migrate && gunicorn social_network.wsgi -b 0.0.0.0:8000"
+CMD sh -c "python manage.py migrate && gunicorn website_project.wsgi -b 0.0.0.0:8000"
