@@ -1,48 +1,46 @@
 {% extends 'network/base.html' %}
 
-{% block title %}Налаштування профілю - SocialNet{% endblock %}
+{% block title %}Налаштування профілю{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center mt-5">
-    <div class="col-md-6 col-lg-5">
-        <div class="card shadow-lg border-0 rounded-4">
-            <div class="card-header bg-white border-0 pt-4 text-center">
-                <h3 class="fw-bold text-dark">Налаштування профілю</h3>
-                <p class="text-muted small">Оновіть своє фото та інформацію про себе</p>
-            </div>
+    <div class="col-md-5">
+        <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
+            <div class="bg-primary" style="height: 80px;"></div>
 
-            <div class="card-body px-4 pb-4">
+            <div class="card-body px-4 text-center" style="margin-top: -50px;">
                 <form method="POST" enctype="multipart/form-data">
                     {% csrf_token %}
 
-                    <div class="text-center mb-4">
-                        <div class="position-relative d-inline-block">
+                    <div class="position-relative d-inline-block mb-4">
+                        <div id="avatar-container" style="cursor: pointer;" title="Натисніть, щоб змінити фото">
                             {% if user.profile.avatar %}
-                                <img src="{{ user.profile.avatar.url }}" id="avatar-preview" class="rounded-circle border shadow-sm" style="width: 120px; height: 120px; object-fit: cover;">
+                                <img src="{{ user.profile.avatar.url }}" id="avatar-preview" class="rounded-circle border border-4 border-white shadow-sm" style="width: 120px; height: 120px; object-fit: cover;">
                             {% else %}
-                                <div id="avatar-placeholder" class="bg-primary text-white rounded-circle mx-auto d-flex align-items-center justify-content-center shadow-sm" style="width: 120px; height: 120px; font-size: 40px; font-weight: bold;">
+                                <div id="avatar-placeholder" class="bg-secondary text-white rounded-circle border border-4 border-white d-flex align-items-center justify-content-center shadow-sm" style="width: 120px; height: 120px; font-size: 40px; font-weight: bold;">
                                     {{ user.username|first|upper }}
                                 </div>
                             {% endif %}
+                            <div class="position-absolute bottom-0 end-0 bg-white rounded-circle shadow-sm d-flex align-items-center justify-content-center" style="width: 35px; height: 35px;">
+                                📷
+                            </div>
                         </div>
+                        <input type="file" name="avatar" id="id_avatar" class="d-none" accept="image/*">
                     </div>
 
-                    <div class="mb-3">
-                        <label for="id_avatar" class="form-label fw-bold small text-secondary">Ваше фото</label>
-                        <input type="file" name="avatar" id="id_avatar" class="form-control form-control-sm rounded-3 shadow-sm" accept="image/*">
-                        <div class="form-text mt-1" style="font-size: 11px;">Рекомендовано квадратне фото (JPG, PNG).</div>
-                    </div>
+                    <h4 class="fw-bold mb-1">{{ user.username }}</h4>
+                    <p class="text-muted small mb-4">Натисніть на фото, щоб завантажити нове</p>
 
-                    <div class="mb-4">
-                        <label for="id_bio" class="form-label fw-bold small text-secondary">Про себе (Bio)</label>
-                        <textarea name="bio" id="id_bio" class="form-control rounded-3 shadow-sm" rows="4" placeholder="Розкажіть щось цікаве про себе...">{{ user.profile.bio }}</textarea>
+                    <div class="text-start mb-4">
+                        <label for="id_bio" class="form-label fw-bold small text-secondary px-2">Про себе</label>
+                        <textarea name="bio" id="id_bio" class="form-control rounded-4 border-light bg-light p-3" rows="3" placeholder="Розкажіть про себе...">{{ user.profile.bio }}</textarea>
                     </div>
 
                     <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-primary btn-lg rounded-3 fw-bold shadow-sm">
+                        <button type="submit" class="btn btn-primary btn-lg rounded-pill fw-bold shadow-sm">
                             Зберегти зміни
                         </button>
-                        <a href="{% url 'profile' user.username %}" class="btn btn-link btn-sm text-decoration-none text-muted">Скасувати</a>
+                        <a href="{% url 'profile' user.username %}" class="btn btn-link text-decoration-none text-muted small">Скасувати</a>
                     </div>
                 </form>
             </div>
@@ -51,24 +49,36 @@
 </div>
 
 <script>
-    document.getElementById('id_avatar').onchange = function (evt) {
-        var tgt = evt.target || window.event.srcElement,
-            files = tgt.files;
+    // Робимо аватарку клікабельною
+    const avatarContainer = document.getElementById('avatar-container');
+    const fileInput = document.getElementById('id_avatar');
+    const preview = document.getElementById('avatar-preview');
+    const placeholder = document.getElementById('avatar-placeholder');
 
-        if (FileReader && files && files.length) {
-            var fr = new FileReader();
-            fr.onload = function () {
-                let img = document.getElementById('avatar-preview');
-                if (img) {
-                    img.src = fr.result;
-                } else {
-                    // Якщо аватарки не було, замінюємо букву на картинку
-                    let placeholder = document.getElementById('avatar-placeholder');
-                    placeholder.outerHTML = `<img src="${fr.result}" id="avatar-preview" class="rounded-circle border shadow-sm" style="width: 120px; height: 120px; object-fit: cover;">`;
-                }
+    avatarContainer.addEventListener('click', () => {
+        fileInput.click();
+    });
+
+    // Попередній перегляд при виборі файлу
+    fileInput.onchange = function (evt) {
+        const [file] = fileInput.files;
+        if (file) {
+            const url = URL.createObjectURL(file);
+            if (preview) {
+                preview.src = url;
+            } else if (placeholder) {
+                // Якщо була буква, міняємо на картинку
+                placeholder.innerHTML = `<img src="${url}" id="avatar-preview" class="rounded-circle border border-4 border-white shadow-sm" style="width: 120px; height: 120px; object-fit: cover;">`;
             }
-            fr.readAsDataURL(files[0]);
         }
     }
 </script>
+
+<style>
+    textarea:focus {
+        background-color: #fff !important;
+        border-color: #0d6efd !important;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.1) !important;
+    }
+</style>
 {% endblock %}

@@ -5,7 +5,7 @@
 {% block content %}
 <div class="row mt-4">
     <div class="col-md-3 d-none d-md-block">
-        <div class="card p-3 mb-3 text-center shadow-sm border-0 rounded-4">
+        <div class="card p-3 mb-3 text-center shadow-sm border-0 rounded-4 sticky-top post-card" style="top: 90px;">
             <div class="mb-3 mt-2">
                 {% if user.is_authenticated %}
                     {% if user.profile.avatar %}
@@ -16,7 +16,7 @@
                         </div>
                     {% endif %}
                 {% else %}
-                    <div class="bg-light text-muted rounded-circle mx-auto d-flex align-items-center justify-content-center border" style="width: 100px; height: 100px; font-size: 40px;">
+                    <div class="bg-body-secondary text-muted rounded-circle mx-auto d-flex align-items-center justify-content-center border" style="width: 100px; height: 100px; font-size: 40px;">
                         ?
                     </div>
                 {% endif %}
@@ -24,7 +24,7 @@
 
             <h5 class="card-title mb-1">
                 {% if user.is_authenticated %}
-                    <a href="{% url 'profile' user.username %}" class="text-decoration-none text-dark fw-bold">{{ user.username }}</a>
+                    <a href="{% url 'profile' user.username %}" class="text-decoration-none text-wrap fw-bold text-body">{{ user.username }}</a>
                 {% else %}
                     Гість
                 {% endif %}
@@ -43,8 +43,7 @@
                     </div>
                 </div>
                 <div class="d-grid gap-2">
-                    <a href="{% url 'profile' user.username %}" class="btn btn-primary btn-sm rounded-pill fw-bold">Мій профіль</a>
-                    <a href="{% url 'edit_profile' %}" class="btn btn-outline-secondary btn-sm rounded-pill">Налаштування</a>
+                    <a href="{% url 'profile' user.username %}" class="btn btn-primary btn-sm rounded-pill fw-bold shadow-sm">Мій профіль</a>
                 </div>
             {% else %}
                 <p class="text-muted small">Увійдіть, щоб спілкуватися</p>
@@ -54,44 +53,78 @@
     </div>
 
     <div class="col-md-6">
+
         {% if user.is_authenticated %}
-            <div class="card mb-4 shadow-sm border-0 rounded-4 overflow-hidden">
-                <div class="card-body bg-white">
-                    <h6 class="fw-bold mb-3 text-secondary">Поділіться думками</h6>
+        <div class="d-flex mb-4 bg-switcher p-1 rounded-pill shadow-sm border" style="width: fit-content;">
+            <a href="{% url 'index' %}"
+               class="btn btn-sm px-4 rounded-pill fw-bold {% if not view %}btn-primary shadow-sm{% else %}text-muted hover-bg-light{% endif %}">
+                Для всіх
+            </a>
+            <a href="{% url 'index' %}?view=following"
+               class="btn btn-sm px-4 rounded-pill fw-bold {% if view == 'following' %}btn-primary shadow-sm{% else %}text-muted hover-bg-light{% endif %}">
+                Підписки
+            </a>
+            <a href="{% url 'popular_posts' %}"
+               class="btn btn-sm px-4 rounded-pill fw-bold {% if view == 'popular' %}btn-primary shadow-sm{% else %}text-muted hover-bg-light{% endif %}">
+                🔥 Популярне
+            </a>
+        </div>
+        {% endif %}
+
+        {% if user.is_authenticated and view != 'following' and view != 'popular' %}
+            <div class="card mb-4 shadow-sm border-0 rounded-4 overflow-hidden post-card">
+                <div class="card-body">
+                    <h6 class="fw-bold mb-3 text-secondary px-1">Що у вас нового?</h6>
                     <form method="POST" enctype="multipart/form-data">
                         {% csrf_token %}
                         <div class="mb-3">
                             {{ form.content }}
                         </div>
+
                         <div class="d-flex justify-content-between align-items-center">
-                            <div class="text-muted">
-                                <label class="btn btn-light btn-sm rounded-pill mb-0">
-                                    📸 {{ form.image }}
+                            <div class="image-upload">
+                                <label for="id_image" class="btn btn-secondary-subtle btn-sm rounded-pill px-3 shadow-sm border transition-all d-flex align-items-center" style="cursor: pointer;">
+                                    <span class="me-2">🖼️</span>
+                                    <span id="file-chosen" class="text-secondary small fw-bold">Додати фото</span>
                                 </label>
+                                <input type="file" name="image" id="id_image" class="d-none" accept="image/*">
                             </div>
-                            <button type="submit" class="btn btn-primary px-4 fw-bold rounded-pill shadow-sm">Опублікувати</button>
+
+                            <button type="submit" class="btn btn-primary px-4 fw-bold rounded-pill shadow-sm">
+                                Опублікувати
+                            </button>
                         </div>
                     </form>
                 </div>
             </div>
         {% endif %}
 
-        <h4 class="mb-4 fw-bold text-dark">Останні новини</h4>
+        <h5 class="mb-3 fw-bold text-body">
+            {% if view == 'following' %}🔍 Стрічка вашого кола підписок
+            {% elif view == 'popular' %}🔥 Найпопулярніші обговорення
+            {% else %}🌍 Останні новини платформи{% endif %}
+        </h5>
 
         {% for post in posts %}
-            <div class="card mb-4 shadow-sm border-0 rounded-4">
+            <div class="card mb-4 shadow-sm border-0 rounded-4 transition-all post-card" id="post-card-{{ post.id }}">
                 <div class="card-body">
                     <div class="d-flex align-items-center justify-content-between mb-3">
                         <div class="d-flex align-items-center">
-                            {% if post.author.profile.avatar %}
-                                <img src="{{ post.author.profile.avatar.url }}" class="rounded-circle border shadow-sm" style="width: 48px; height: 48px; object-fit: cover;">
-                            {% else %}
-                                <div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 48px; height: 48px; font-weight: bold; font-size: 20px;">
-                                    {{ post.author.username|first|upper }}
-                                </div>
-                            {% endif %}
+                            <div class="position-relative">
+                                {% if post.author.profile.avatar %}
+                                    <img src="{{ post.author.profile.avatar.url }}" class="rounded-circle border shadow-sm" style="width: 48px; height: 48px; object-fit: cover;">
+                                {% else %}
+                                    <div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; font-weight: bold;">
+                                        {{ post.author.username|first|upper }}
+                                    </div>
+                                {% endif %}
+
+                                {% if post.author.profile.last_activity and post.author.profile.last_activity > online_limit %}
+                                    <span class="position-absolute bottom-0 end-0 p-1 bg-success border border-2 border-dark-subtle rounded-circle" style="width: 13px; height: 13px;" title="Онлайн"></span>
+                                {% endif %}
+                            </div>
                             <div class="ms-3">
-                                <a href="{% url 'profile' post.author.username %}" class="fw-bold text-decoration-none text-dark d-block">
+                                <a href="{% url 'profile' post.author.username %}" class="fw-bold text-decoration-none text-body d-block">
                                     {{ post.author.username }}
                                 </a>
                                 <small class="text-muted" style="font-size: 0.75rem;">{{ post.created_at|date:"d E H:i" }}</small>
@@ -99,61 +132,79 @@
                         </div>
 
                         {% if user == post.author %}
-                            <a href="{% url 'delete_post' post.id %}"
-                               class="text-danger text-decoration-none p-2 rounded-circle hover-bg-light"
-                               onclick="return confirm('Видалити цей пост назавжди?')"
-                               title="Видалити пост">
-                                <span style="font-size: 20px;">&times;</span>
-                            </a>
+                            <div class="dropdown">
+                                <button class="btn btn-secondary-subtle btn-sm rounded-circle border-0" type="button" data-bs-toggle="dropdown">
+                                    •••
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end border-0 shadow-sm rounded-3">
+                                    <li><button class="dropdown-item edit-btn-trigger" data-post-id="{{ post.id }}">✏️ Редагувати</button></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item text-danger" href="{% url 'delete_post' post.id %}" onclick="return confirm('Видалити цей post?')">🗑️ Видалити</a></li>
+                                </ul>
+                            </div>
                         {% endif %}
                     </div>
 
-                    <p class="card-text fs-5 text-dark mb-3">{{ post.content }}</p>
+                    <div class="post-content-container mb-3">
+                        <p class="card-text fs-5 post-text-content" id="post-text-{{ post.id }}">{{ post.content }}</p>
+
+                        <div class="edit-form-block d-none" id="edit-block-{{ post.id }}">
+                            <textarea class="form-control mb-2 edit-textarea border" id="edit-input-{{ post.id }}" rows="3">{{ post.content }}</textarea>
+                            <div class="d-flex gap-2 justify-content-end">
+                                <button class="btn btn-secondary-subtle btn-sm rounded-pill px-3 cancel-edit-btn" data-post-id="{{ post.id }}">Скасувати</button>
+                                <button class="btn btn-primary btn-sm rounded-pill px-3 save-edit-btn" data-post-id="{{ post.id }}">Зберегти</button>
+                            </div>
+                        </div>
+                    </div>
 
                     {% if post.image %}
-                        <div class="rounded-4 overflow-hidden border mb-3">
-                            <img src="{{ post.image.url }}" class="img-fluid w-100" style="max-height: 450px; object-fit: cover;" alt="Post image">
-                        </div>
+                        <img src="{{ post.image.url }}" class="img-fluid rounded-4 mb-3 w-100 border shadow-sm" style="max-height: 400px; object-fit: cover;">
                     {% endif %}
 
                     <hr class="opacity-10">
 
                     <div class="d-flex justify-content-around mb-2">
-                        <a href="{% url 'like_post' post.id %}" class="btn btn-light btn-sm w-100 me-2 rounded-pill border-0 transition-all">
+                        <button class="btn btn-secondary-subtle btn-sm w-100 me-2 rounded-pill border-0 like-btn d-flex align-items-center justify-content-center" data-post-id="{{ post.id }}">
                             {% if user in post.likes.all %}
-                                <span class="text-danger fw-bold">❤️ {{ post.likes.count }}</span>
+                                <span class="like-icon text-danger me-2">❤️</span>
+                                <span class="like-count text-danger fw-bold">{{ post.likes.count }}</span>
                             {% else %}
-                                <span>🤍 {{ post.likes.count }}</span>
+                                <span class="like-icon text-muted me-2">🤍</span>
+                                <span class="like-count text-muted fw-bold">{{ post.likes.count }}</span>
                             {% endif %}
-                        </a>
-                        <div class="btn btn-light btn-sm w-100 rounded-pill border-0 text-muted">
-                            💬 {{ post.comments.count }}
+                        </button>
+                        <div class="btn btn-secondary-subtle btn-sm w-100 rounded-pill border-0 text-muted d-flex align-items-center justify-content-center">
+                            💬 <span class="ms-2 fw-bold text-body">{{ post.comments.count }}</span>
                         </div>
                     </div>
 
-                    <div class="bg-light p-3 rounded-4 mt-3">
+                    <div class="bg-comments p-3 rounded-4 mt-3 border">
                         {% for comment in post.comments.all %}
-                            <div class="mb-2 border-bottom border-white pb-2">
+                            <div class="mb-2 border-bottom border-secondary-subtle pb-2">
                                 <div class="d-flex justify-content-between align-items-center">
+                                    <strong class="small text-primary">@{{ comment.author.username }}</strong>
                                     <div>
-                                        <strong class="small text-primary">@{{ comment.author.username }}</strong>
-                                        <small class="text-muted ms-1" style="font-size: 9px;">{{ comment.created_at|date:"H:i" }}</small>
+                                        <button class="btn btn-link btn-sm p-0 text-decoration-none comment-like-btn me-2" data-comment-id="{{ comment.id }}" style="font-size: 0.82rem;">
+                                            {% if user in comment.likes.all %}
+                                                <span class="c-like-icon">❤️</span> <span class="c-like-count text-danger fw-bold">{{ comment.likes.count }}</span>
+                                            {% else %}
+                                                <span class="c-like-icon">🤍</span> <span class="c-like-count text-muted">{{ comment.likes.count }}</span>
+                                            {% endif %}
+                                        </button>
+
+                                        {% if user == comment.author or user == post.author %}
+                                            <a href="{% url 'delete_comment' comment.id %}" class="text-danger text-decoration-none fw-bold small" onclick="return confirm('Видалити коментар?')">&times;</a>
+                                        {% endif %}
                                     </div>
-                                    {% if user == comment.author or user == post.author %}
-                                        <a href="{% url 'delete_comment' comment.id %}"
-                                           class="text-danger text-decoration-none fw-bold px-1"
-                                           onclick="return confirm('Видалити коментар?')"
-                                           title="Видалити">&times;</a>
-                                    {% endif %}
                                 </div>
-                                <div class="small text-dark">{{ comment.content }}</div>
+                                <div class="small text-body mt-1">{{ comment.content }}</div>
                             </div>
                         {% endfor %}
 
                         {% if user.is_authenticated %}
-                            <form action="{% url 'add_comment' post.id %}" method="POST" class="mt-3 d-flex gap-2">
+                            <form action="{% url 'add_comment' post.id %}" method="POST" class="mt-2 d-flex gap-2">
                                 {% csrf_token %}
-                                <input type="text" name="content" class="form-control form-control-sm border-0 shadow-sm rounded-pill px-3" placeholder="Напишіть щось..." required>
+                                <input type="text" name="content" class="form-control form-control-sm border-0 bg-body shadow-sm rounded-pill px-3" placeholder="Ваша думка..." required>
                                 <button type="submit" class="btn btn-primary btn-sm rounded-pill px-3 fw-bold">OK</button>
                             </form>
                         {% endif %}
@@ -161,28 +212,192 @@
                 </div>
             </div>
         {% empty %}
-            <div class="card p-5 text-center shadow-sm border-0 rounded-4 bg-white">
-                <p class="text-muted mb-0">Тут поки немає постів. Будьте першим!</p>
+            <div class="card p-5 text-center shadow-sm border-0 rounded-4 post-card">
+                <div class="mb-3" style="font-size: 50px;">🏜️</div>
+                <h5 class="fw-bold">Тут поки порожньо</h5>
+                <p class="text-muted">За вашим запитом постів не знайдено.</p>
+                <a href="{% url 'index' %}" class="btn btn-primary rounded-pill px-4">До загальної стрічки</a>
             </div>
         {% endfor %}
     </div>
 
-    <div class="col-md-3">
-        <div class="card p-3 shadow-sm border-0 rounded-4 mb-3">
-            <h6 class="fw-bold text-primary mb-3">Вам може сподобатися</h6>
-            <p class="text-muted small">Шукайте друзів за іменем у пошуку або переходьте на профілі авторів постів.</p>
-        </div>
-        <div class="text-center p-2">
-            <small class="text-muted">SocialNet &copy; 2026</small>
+    <div class="col-md-3 d-none d-lg-block">
+        <div class="card p-3 shadow-sm border-0 rounded-4 sticky-top post-card" style="top: 90px;">
+            <h6 class="fw-bold text-primary mb-3">Хто на зв'язку?</h6>
+            <p class="text-muted small">Шукайте друзів за нікнеймом зверху і підписуйтесь, щоб наповнити свою стрічку!</p>
         </div>
     </div>
 </div>
 
+<script>
+    // 1. КОД ВИБОРУ ФОТО ДЛЯ ФОРМИ
+    const fileBtn = document.getElementById('id_image');
+    const fileChosen = document.getElementById('file-chosen');
+    if (fileBtn) {
+        fileBtn.addEventListener('change', function() {
+            if (this.files && this.files.length > 0) {
+                fileChosen.textContent = this.files[0].name;
+                fileChosen.className = "text-primary small fw-bold";
+            } else {
+                fileChosen.textContent = "Додати фото";
+                fileChosen.className = "text-secondary small fw-bold";
+            }
+        });
+    }
+
+    // 2. ДИНАМІЧНІ ЛАЙКИ ДЛЯ ПОСТІВ
+    document.querySelectorAll('.like-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const postId = this.dataset.postId;
+            const icon = this.querySelector('.like-icon');
+            const countSpan = this.querySelector('.like-count');
+
+            fetch(`/like/${postId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) { alert(data.error); return; }
+                if (data.liked) {
+                    icon.textContent = '❤️';
+                    icon.className = 'like-icon text-danger me-2';
+                    countSpan.className = 'like-count text-danger fw-bold';
+                } else {
+                    icon.textContent = '🤍';
+                    icon.className = 'like-icon text-muted me-2';
+                    countSpan.className = 'like-count text-muted fw-bold';
+                }
+                countSpan.textContent = data.like_count;
+            })
+            .catch(err => console.error(err));
+        });
+    });
+
+    // 3. ДИНАМІЧНІ ЛАЙКИ ДЛЯ КОМЕНТАРІВ
+    document.querySelectorAll('.comment-like-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const commentId = this.dataset.commentId;
+            const icon = this.querySelector('.c-like-icon');
+            const countSpan = this.querySelector('.c-like-count');
+
+            fetch(`/like_comment/${commentId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) { alert(data.error); return; }
+                if (data.liked) {
+                    icon.textContent = '❤️';
+                    countSpan.className = 'c-like-count text-danger fw-bold';
+                } else {
+                    icon.textContent = '🤍';
+                    countSpan.className = 'c-like-count text-muted';
+                }
+                countSpan.textContent = data.like_count;
+            })
+            .catch(err => console.error(err));
+        });
+    });
+
+    // 4. РЕДАГУВАННЯ ПОСТІВ
+    document.querySelectorAll('.edit-btn-trigger').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const id = this.dataset.postId;
+            document.getElementById(`post-text-${id}`).classList.add('d-none');
+            document.getElementById(`edit-block-${id}`).classList.remove('d-none');
+        });
+    });
+
+    document.querySelectorAll('.cancel-edit-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const id = this.dataset.postId;
+            document.getElementById(`post-text-${id}`).classList.remove('d-none');
+            document.getElementById(`edit-block-${id}`).classList.add('d-none');
+        });
+    });
+
+    document.querySelectorAll('.save-edit-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const id = this.dataset.postId;
+            const textValue = document.getElementById(`edit-input-${id}`).value;
+
+            const formData = new FormData();
+            formData.append('content', textValue);
+
+            fetch(`/edit_post/${id}`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) { alert(data.error); return; }
+                document.getElementById(`post-text-${id}`).textContent = data.content;
+                document.getElementById(`post-text-${id}`).classList.remove('d-none');
+                document.getElementById(`edit-block-${id}`).classList.add('d-none');
+            })
+            .catch(err => console.error(err));
+        });
+    });
+</script>
+
 <style>
-    /* Легкий ефект при наведенні на кнопки */
-    .transition-all { transition: 0.2s ease-in-out; }
-    .transition-all:hover { transform: scale(1.02); }
-    .hover-bg-light:hover { background-color: #f8f9fa; }
-    textarea { resize: none; border-radius: 12px !important; border: 1px solid #eee !important; padding: 12px !important; }
+    /* ГЛОБАЛЬНЫЕ НАСТРОЙКИ ТЕМ ДЛЯ ВСЕГО САЙТА */
+
+    /* СВЕТЛАЯ ТЕМА (Мягкий серый фон, белые карточки) */
+    html[data-bs-theme="light"], [data-bs-theme="light"] body {
+        background-color: #f0f2f5 !important;
+    }
+    html[data-bs-theme="light"] .post-card {
+        background-color: #ffffff !important;
+        border: none !important;
+    }
+    html[data-bs-theme="light"] .bg-switcher {
+        background-color: #ffffff !important;
+    }
+    html[data-bs-theme="light"] .bg-comments {
+        background-color: #f0f2f5 !important;
+    }
+
+    /* ТЕМНАЯ ТЕМА (Разделение постов границами) */
+    html[data-bs-theme="dark"] .post-card {
+        background-color: #1e222b !important;
+        border: 1px solid #2d323f !important;
+    }
+    html[data-bs-theme="dark"] .bg-switcher {
+        background-color: #161920 !important;
+    }
+    html[data-bs-theme="dark"] .bg-comments {
+        background-color: #161920 !important;
+    }
+
+    /* Дополнительные общие стили */
+    textarea {
+        resize: none;
+        border: 1px solid var(--bs-border-color) !important;
+        background-color: var(--bs-body-bg) !important;
+        color: var(--bs-body-color) !important;
+        border-radius: 15px !important;
+        padding: 15px !important;
+        font-size: 1.1rem;
+        transition: 0.2s;
+    }
+    textarea:focus {
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.1) !important;
+    }
+    .transition-all:hover { transform: translateY(-1px); transition: 0.2s; }
+    .hover-bg-light:hover { background-color: var(--bs-secondary-bg); }
+    .dropdown-toggle::after { display: none; }
 </style>
 {% endblock %}

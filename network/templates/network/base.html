@@ -1,21 +1,107 @@
 {% load static %}
 
 <!DOCTYPE html>
-<html lang="uk">
+<html lang="uk" data-bs-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}SocialNet{% endblock %}</title>
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
     <style>
+        /* Основні налаштування сторінки */
+        html, body {
+            height: 100%;
+        }
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f0f2f5;
+            display: flex;
+            flex-direction: column;
+            transition: background-color 0.3s, color 0.3s;
         }
-        .navbar {
+
+        /* --- ГЛОБАЛЬНИЙ ФІКС ТЕМ ТА ФОНІВ ДЛЯ ВСІХ СТОРІНОК --- */
+
+        /* 1. СВІТЛА ТЕМА */
+        html[data-bs-theme="light"],
+        html[data-bs-theme="light"] body {
+            background-color: #f0f2f5 !important; /* Фірмовий сірий фон навколо карток */
+            color: #212529 !important;
+        }
+        /* Усі картки у світлій темі */
+        html[data-bs-theme="light"] .card,
+        html[data-bs-theme="light"] [class*="card"] {
             background-color: #ffffff !important;
+            border: none !important;
+        }
+        /* Блок коментарів у світлій темі */
+        html[data-bs-theme="light"] .bg-comments,
+        html[data-bs-theme="light"] .card-body div[class*="bg-"] {
+            background-color: #f0f2f5 !important;
+        }
+
+
+        /* 2. ТЕМНА ТЕМА */
+        html[data-bs-theme="dark"],
+        html[data-bs-theme="dark"] body {
+            background-color: #161920 !important; /* Глибокий темний фон сайту */
+            color: #f8f9fa !important;
+        }
+        /* Усі картки (профіль, пости) у темній темі */
+        html[data-bs-theme="dark"] .card,
+        html[data-bs-theme="dark"] [class*="card"] {
+            background-color: #1e222b !important; /* Картки трохи світліші за загальний фон */
+            border: 1px solid #2d323f !important;
+        }
+        /* Коментарі у темній темі */
+        html[data-bs-theme="dark"] .bg-comments,
+        html[data-bs-theme="dark"] [class*="bg-comments"],
+        html[data-bs-theme="dark"] .card-body div[class*="bg-"] {
+            background-color: #14171c !important; /* Темніші за саму картку */
+            border: 1px solid #2d323f !important;
+        }
+        /* Поля введення у темній темі */
+        html[data-bs-theme="dark"] .bg-comments input,
+        html[data-bs-theme="dark"] textarea {
+            background-color: #161920 !important;
+            color: #ffffff !important;
+            border: 1px solid #2d323f !important;
+        }
+
+        /* КНОПКИ ЛАЙКІВ ТА КОМЕНТАРІВ У ТЕМНІЙ ТЕМІ (ФІКС БІЛИХ ПЛАШОК) */
+        html[data-bs-theme="dark"] .card .rounded-pill,
+        html[data-bs-theme="dark"] .card [class*="rounded-pill"],
+        html[data-bs-theme="dark"] .card button[class*="bg-white"],
+        html[data-bs-theme="dark"] .card div[class*="bg-white"] {
+            background-color: #2d323f !important; /* Робимо плашки кнопок темними */
+            color: #ffffff !important;            /* Текст усередині кнопок — білим */
+            border: 1px solid #3d4354 !important;
+        }
+
+        /* Текст та посилання у темній темі */
+        html[data-bs-theme="dark"] .card-title,
+        html[data-bs-theme="dark"] .card-title a,
+        html[data-bs-theme="dark"] a.text-body,
+        html[data-bs-theme="dark"] .fw-bold,
+        html[data-bs-theme="dark"] h5,
+        html[data-bs-theme="dark"] h6,
+        html[data-bs-theme="dark"] .main-content h3, /* Для заголовка "Публікації користувача" */
+        html[data-bs-theme="dark"] span:not(.badge) {
+            color: #ffffff !important;
+        }
+        html[data-bs-theme="dark"] .text-muted,
+        html[data-bs-theme="dark"] small {
+            color: #a0aec0 !important;
+        }
+
+        /* Навігація */
+        .navbar {
+            background-color: var(--bs-body-bg) !important;
             box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            padding: 0.8rem 0;
+            border-bottom: 1px solid var(--bs-border-color) !important;
         }
         .navbar-brand {
             font-weight: 700;
@@ -24,15 +110,43 @@
         }
         .nav-link {
             font-weight: 600;
-            color: #4b4f56 !important;
-            transition: color 0.2s;
+            color: var(--bs-heading-color) !important;
+            transition: 0.2s;
         }
         .nav-link:hover {
             color: #0d6efd !important;
         }
+
+        /* Пошук */
+        .search-input {
+            background-color: var(--bs-tertiary-bg) !important;
+            color: var(--bs-body-color) !important;
+            border: 1px solid transparent !important;
+            transition: 0.2s;
+        }
         .search-input:focus {
-            box-shadow: 0 0 0 0.25 disposable rgba(13, 110, 253, 0.1) !important;
-            border: 1px solid #0d6efd !important;
+            background-color: var(--bs-body-bg) !important;
+            border-color: #0d6efd !important;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.1) !important;
+        }
+
+        .main-content {
+            flex: 1 0 auto;
+        }
+
+        footer {
+            flex-shrink: 0;
+            background-color: var(--bs-body-bg) !important;
+            border-top: 1px solid var(--bs-border-color) !important;
+        }
+
+        .btn-primary {
+            background-color: #0d6efd;
+            border: none;
+            transition: 0.2s opacity;
+        }
+        .btn-primary:hover {
+            opacity: 0.9;
         }
     </style>
 </head>
@@ -55,29 +169,33 @@
 
                 <form class="d-flex mx-auto col-12 col-lg-5 my-2 my-lg-0" action="{% url 'search_users' %}" method="GET">
                     <div class="input-group">
-                        <input class="form-control form-control-sm search-input border-0 bg-light rounded-pill-start ps-3"
-                               type="search" name="q" placeholder="Знайти друзів за ніком..."
+                        <input class="form-control form-control-sm search-input rounded-pill-start ps-3 border-0"
+                               type="search" name="q" placeholder="Знайти друзів..."
                                style="border-top-left-radius: 50px; border-bottom-left-radius: 50px;"
                                required>
-                        <button class="btn btn-light btn-sm border-0 bg-light"
+                        <button class="btn btn-sm border-0"
                                 type="submit"
-                                style="border-top-right-radius: 50px; border-bottom-right-radius: 50px; padding-right: 15px;">
+                                style="border-top-right-radius: 50px; border-bottom-right-radius: 50px; padding-right: 15px; background-color: var(--bs-tertiary-bg); color: var(--bs-body-color);">
                             🔍
                         </button>
                     </div>
                 </form>
 
-                <ul class="navbar-nav align-items-center">
+                <ul class="navbar-nav align-items-center gap-2">
                     {% if user.is_authenticated %}
-                        <li class="nav-item">
-                            <a class="nav-link px-3 d-flex align-items-center" href="{% url 'profile' user.username %}">
+                        <li class="nav-item me-2">
+                            <a class="nav-link px-3 d-flex align-items-center fw-bold text-body" href="{% url 'profile' user.username %}">
                                 {% if user.profile.avatar %}
-                                    <img src="{{ user.profile.avatar.url }}" class="rounded-circle me-2" style="width: 28px; height: 28px; object-fit: cover;">
+                                    <img src="{{ user.profile.avatar.url }}" class="rounded-circle me-2 border shadow-sm" style="width: 32px; height: 32px; object-fit: cover;">
+                                {% else %}
+                                    <div class="bg-primary text-white rounded-circle me-2 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; font-size: 14px;">
+                                        {{ user.username|first|upper }}
+                                    </div>
                                 {% endif %}
                                 {{ user.username }}
                             </a>
                         </li>
-                        <li class="nav-item ms-lg-2">
+                        <li class="nav-item">
                             <form action="{% url 'logout' %}" method="post" class="d-inline">
                                 {% csrf_token %}
                                 <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-3 fw-bold">Вихід</button>
@@ -91,16 +209,65 @@
                             <a class="btn btn-primary btn-sm rounded-pill px-4 fw-bold shadow-sm" href="{% url 'register' %}">Реєстрація</a>
                         </li>
                     {% endif %}
+
+                    <li class="nav-item ms-lg-2">
+                        <button id="theme-toggle" class="btn btn-sm rounded-circle border-0 p-0 d-flex align-items-center justify-content-center" style="font-size: 1.2rem; width: 35px; height: 35px; background-color: var(--bs-tertiary-bg);" title="Переключити тему">
+                            🌓
+                        </button>
+                    </li>
                 </ul>
             </div>
         </div>
     </nav>
 
-    <div class="container">
-        {% block content %}
-        {% endblock %}
-    </div>
+    <main class="main-content">
+        <div class="container">
+            {% block content %}
+            {% endblock %}
+        </div>
+    </main>
+
+    <footer class="border-top mt-5 py-4">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-4 text-center text-md-start mb-3 mb-md-0">
+                    <span class="fw-bold text-primary fs-5">SocialNet</span>
+                    <p class="text-muted small mb-0 mt-1">&copy; 2026 : Усі права захищені.</p>
+                </div>
+
+                <div class="col-md-4 text-center mb-3 mb-md-0">
+                    <ul class="list-inline mb-0">
+                        <li class="list-inline-item"><a href="{% url 'index' %}" class="text-muted text-decoration-none small mx-2">Головна</a></li>
+                        <li class="list-inline-item"><a href="#" class="text-muted text-decoration-none small mx-2">Про проєкт</a></li>
+                        <li class="list-inline-item"><a href="#" class="text-muted text-decoration-none small mx-2">Допомога</a></li>
+                    </ul>
+                </div>
+
+                <div class="col-md-4 text-center text-md-end">
+                    <span class="text-muted small">
+                        Зроблено з ❤️ для спілкування
+                    </span>
+                </div>
+            </div>
+        </div>
+    </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        const toggleBtn = document.getElementById('theme-toggle');
+        const htmlElement = document.documentElement;
+
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        htmlElement.setAttribute('data-bs-theme', savedTheme);
+
+        toggleBtn.addEventListener('click', () => {
+            const currentTheme = htmlElement.getAttribute('data-bs-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            htmlElement.setAttribute('data-bs-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+        });
+    </script>
 </body>
 </html>

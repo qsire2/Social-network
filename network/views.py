@@ -5,30 +5,42 @@ from django.contrib.auth.decorators import login_required
 from django.urls import reverse_lazy
 from django.views import generic
 from .models import Post, Comment, Profile
-from .models import Post
-from .forms import PostForm
-from .forms import ProfileUpdateForm
-from django.db.models import Q
+from .forms import PostForm, ProfileUpdateForm
+from django.db.models import Q, Count
+from django.http import JsonResponse
+
 
 def like_post(request, post_id):
     if not request.user.is_authenticated:
-        return redirect('login')
+        return JsonResponse({"error": "Авторизуйтесь, щоб ставити лайки"}, status=401)
 
-    post = get_object_or_404(Post, id=post_id)
+    if request.method == "POST":
+        post = get_object_or_404(Post, id=post_id)
 
-    if post.likes.filter(id=request.user.id).exists():
-        post.likes.remove(request.user)
-    else:
-        post.likes.add(request.user)
+        if post.likes.filter(id=request.user.id).exists():
+            post.likes.remove(request.user)
+            liked = False
+        else:
+            post.likes.add(request.user)
+            liked = True
 
-    return redirect('index')
+        return JsonResponse({
+            "liked": liked,
+            "like_count": post.likes.count()
+        })
+
+    return JsonResponse({"error": "Неправильний метод запиту"}, status=400)
 
 
 def index(request):
-    if request.method == 'POST':
-        if not request.user.is_authenticated:
-            return redirect('login')
+    view = request.GET.get('view')
 
+    if view == 'following' and request.user.is_authenticated:
+        posts = Post.objects.filter(author__profile__followed_by=request.user.profile).order_by('-created_at')
+    else:
+        posts = Post.objects.all().order_by('-created_at')
+
+    if request.method == "POST":
         form = PostForm(request.POST, request.FILES)
         if form.is_valid():
             post = form.save(commit=False)
@@ -38,11 +50,40 @@ def index(request):
     else:
         form = PostForm()
 
-    posts = Post.objects.all().order_by('-created_at')
-    return render(request, 'network/index.html', {
-        'posts': posts,
-        'form': form
+    return render(request, "network/index.html", {
+        "posts": posts,
+        "form": form,
+        "view": view
     })
+
+
+def popular_posts(request):
+    posts = Post.objects.annotate(likes_count=Count('likes')).order_by('-likes_count', '-created_at')
+
+    return render(request, "network/index.html", {
+        "posts": posts,
+        "view": "popular"
+    })
+
+
+@login_required
+def edit_post(request, post_id):
+    if request.method == "POST":
+        post = get_object_or_404(Post, id=post_id)
+
+        # Перевірка безпеки: редагувати може тільки автор
+        if post.author != request.user:
+            return JsonResponse({"error": "Доступ заборонено"}, status=403)
+
+        new_content = request.POST.get("content", "").strip()
+        if new_content:
+            post.content = new_content
+            post.save()
+            return JsonResponse({"success": True, "content": post.content})
+
+        return JsonResponse({"error": "Текст поста не може бути порожнім"}, status=400)
+
+    return JsonResponse({"error": "Неправильний метод запиту"}, status=400)
 
 
 class RegisterView(generic.CreateView):
@@ -98,6 +139,7 @@ def profile_follow(request, username):
 
     return redirect('profile', username=username)
 
+
 def edit_profile(request):
     if request.method == 'POST':
         form = ProfileUpdateForm(request.POST, request.FILES, instance=request.user.profile)
@@ -128,3 +170,25 @@ def search_users(request):
         'results': results,
         'query': query
     })
+
+
+def like_comment(request, comment_id):
+    if not request.user.is_authenticated:
+        return JsonResponse({"error": "Авторизуйтесь, щоб ставити лайки"}, status=401)
+
+    if request.method == "POST":
+        comment = get_object_or_404(Comment, id=comment_id)
+
+        if comment.likes.filter(id=request.user.id).exists():
+            comment.likes.remove(request.user)
+            liked = False
+        else:
+            comment.likes.add(request.user)
+            liked = True
+
+        return JsonResponse({
+            "liked": liked,
+            "like_count": comment.likes.count()
+        })
+
+    return JsonResponse({"error": "Неправильний метод запиту"}, status=400)
